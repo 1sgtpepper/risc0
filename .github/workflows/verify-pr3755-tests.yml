@@ -1,0 +1,27 @@
+name: Verify PR 3755 unit tests
+
+on:
+  push:
+    branches:
+      - test/verify-pr3755-20261120-v3
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-24.04
+    env:
+      RISC0_SKIP_BUILD: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/rustup
+      - name: Verify production diff matches 524ab087
+        run: |
+          test "$(git rev-parse HEAD^)" = "524ab08749333a0b58b02c3946f9366ceb81db5e"
+          git diff --exit-code 524ab08749333a0b58b02c3946f9366ceb81db5e HEAD -- . ':(exclude).github'
+      - name: Run serde::deserializer unit tests
+        run: cargo test -p risc0-zkvm --lib serde::deserializer::tests -- --nocapture
